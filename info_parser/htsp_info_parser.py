@@ -3,8 +3,6 @@ Created on 14 Aug 2014
 
 @author: khurley
 
-
-
 '''
 import re
 import tvdb_api
@@ -77,6 +75,14 @@ class Episode(object):
     
     def __repr__(self):
         return "%s;%s;s%02d.e%02d [tvdb=%s]"%(self.show_name_for_tvdb(), self.episode_title_for_tvdb(), self.episode_number[0],self.episode_number[1],self.tvdb_ok)
+
+def episode_factory(recording_info):
+    """ use dict representing recording_info to choose episode class and
+    create an instance of Episode
+    """
+    
+    return Episode() 
+
        
 class HTSPInfoParser(object):
     '''
@@ -99,29 +105,9 @@ class HTSPInfoParser(object):
         """
         recordings=htsp.htsprefresh()
         
-        fields={'name': "nameshort:\s+(?P<name>\S[\s\S]+)$",
-                "title": "episodeshort:\s+(?P<title>\S[\s\S]+)$",
-                "full title": "title:\s+(?P<full_title>\S[\s\S]+)$",
-                "description":"desc:\s+(?P<description>\S+.*)$",
-                "episode name":"episodeshort:\s+(?P<episode_name>\S+.*)$"}
-        
-        fields_re={}
-        [fields_re.update({key: re.compile(fields[key])}) for key in fields]
-        [fields_re.update({key: re.compile(optional_fields[key])}) for key in optional_fields]
-        
-        blank_re=re.compile("^\s+$")
         show_info=[]
         current_show={}
-        for line in info_stream:
-            for key in fields_re:
-                a_match=fields_re[key].match(line)
-                if a_match:
-                    matched_field=a_match.groupdict()
-                    # insert field with leading and trailing whitespace removed
-                    [current_show.update({k:matched_field[k].strip()}) for k in matched_field]
-                    
-            # end when all optional and mandatory fields are read *or* when all mandatory fields have been read and a blank line is found:
-            if  ( len(current_show.keys())==(len(fields.keys())+len(optional_fields)))  or blank_re.match(line) and len(current_show.keys())== len(fields.keys()):
+        for recording in recordings:
                 show_info+=[current_show]
                 #self.shows+=[episode_factory(current_show)]
                 current_show={}
@@ -135,8 +121,8 @@ class HTSPInfoParser(object):
         
 if __name__ == '__main__':
     import sys
-    p=IPlayerInfoParser()
-    p.read_log(sys.stdin)
+    p=HTSPInfoParser()
+    p.read_log()
     for s in p.shows:
         s.cross_check_with_tvdb()
         print s

@@ -26,17 +26,23 @@ stop
 @enduml
 
 @startuml
-Title Match HTSP recording to TVDB
 start
-:for rec in recordings;
-:look for episode title in description;
-if (episode title in description) then (yes)
- :lookup in tvdb using title and episode;
-else
- :present description to user and ask to select matching episode;
-endif
-  
-endif
+:start with list of unprocessed recordings;
+repeat
+  :get next unprocessed recording;
+  :try to work out if it's a tvshow;
+  note left: how to work out\nwhether it's a\nmovie or a tvshow?
+  if (is it a tvshow?) then (yes)
+    :look for episode title in description;
+    if (episode title in description) then (yes)
+      :lookup in tvdb using title and episode;
+    else (no episode title)
+      :present description to user along with candidate episodes\nand ask to select matching episode;
+    endif
+  else (no - it's a movie)
+    :lookup title on themoviedb;
+  endif
+repeat while (unprocessed recordings remaining?)
 stop
 @enduml
 
