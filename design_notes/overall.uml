@@ -25,7 +25,20 @@ endwhile (none)
 stop
 @enduml
 
-
+@startuml
+Title Match HTSP recording to TVDB
+start
+:for rec in recordings;
+:look for episode title in description;
+if (episode title in description) then (yes)
+ :lookup in tvdb using title and episode;
+else
+ :present description to user and ask to select matching episode;
+endif
+  
+endif
+stop
+@enduml
 
 @startuml 
 title Abstract classes

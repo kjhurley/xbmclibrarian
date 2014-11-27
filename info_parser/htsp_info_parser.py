@@ -9,7 +9,7 @@ Created on 14 Aug 2014
 import re
 import tvdb_api
 import tvdb_exceptions
-import htsp
+import htsp.htsp
 import xml.etree.cElementTree as ET
 import logging
 
@@ -97,20 +97,14 @@ class HTSPInfoParser(object):
         Initially populate dictionaries built from the fields in the info stream
         
         """
-        
-        
-        htsp_client=htsp.HTSPClient(self._server)
-        htsp_client.authenticate(user='hts',passwd='hts')
-        htsp_client.enableAsyncMetadata({'epg':1})
-        
+        recordings=htsp.htsprefresh()
         
         fields={'name': "nameshort:\s+(?P<name>\S[\s\S]+)$",
                 "title": "episodeshort:\s+(?P<title>\S[\s\S]+)$",
                 "full title": "title:\s+(?P<full_title>\S[\s\S]+)$",
                 "description":"desc:\s+(?P<description>\S+.*)$",
                 "episode name":"episodeshort:\s+(?P<episode_name>\S+.*)$"}
-        optional_fields={
-                "senum": "senum:\s+(?P<senum>s\d+e\d+)$",}
+        
         fields_re={}
         [fields_re.update({key: re.compile(fields[key])}) for key in fields]
         [fields_re.update({key: re.compile(optional_fields[key])}) for key in optional_fields]

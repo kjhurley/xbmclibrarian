@@ -23,7 +23,7 @@ with communicating with HTSP server
 """
 
 import htsmsg
-import log
+import logging
 
 # ###########################################################################
 # HTSP Client
@@ -56,15 +56,15 @@ class HTSPClient:
     args['method'] = func
     if self._user: args['username'] = self._user
     if self._pass: args['digest']   = htsmsg.hmf_bin(self._pass)
-    log.debug('htsp tx:')
-    log.debug(args, pretty=True)
+    logging.debug('htsp tx:')
+    logging.debug(args, pretty=True)
     self._sock.send(htsmsg.serialize(args))
 
   # Receive
   def recv ( self ):
     ret = htsmsg.deserialize(self._sock, False)
-    log.debug('htsp rx:')
-    log.debug(ret, pretty=True)
+    logging.debug('htsp rx:')
+    logging.debug(ret, pretty=True)
     return ret
 
   # Setup
