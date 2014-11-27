@@ -5,15 +5,11 @@ start
 :restore last states;
 note right: Use pickle?
 :search latest available file info;
-note right: look in iplayer log file and get data from htsp
+note right: get latest data from htsp
 :compare against last know files;
 note right: last know files will be those listed in restored object
 while (new file info?) is (found one)
-  if (kind of info?) then (iplayer)
-    :process iplayer file;
-  else (htsp)
-    :process htsp file;
-  endif
+  :process htsp file;
   :build episode;
   :build new filename under xbmc;
   if (store using copy?) then (yes)

@@ -1,25 +1,26 @@
 
 @startuml
-title TVHeadend Info suitable for Tvdb storing using link
+title HTSP Info suitable for Tvdb storing using link
 Librarian->Librarian: Look for new files
-Librarian->HTSPInfoParser: file_info_list = recordings()
+Librarian->HTSPInfoParser: file_info_list = fetch_file_list()
 loop foreach fileinfo in file_info_list
    Librarian->LibraryRecord: new_record = create (file_info)
    note over LibraryRecord
-     initialised using 
+     initialised just using 
      location of htsp recording
      This class will connect 
      the original file and the 
      Episode object
    end note
-   Librarian->Librarian: is_it_a_new_file?
+   Librarian->Librarian: is_it_a_new_download?
    note over Librarian
       check against records of what
       has already been filed
    end note
 note over Librarian: found new file info
 note over Librarian
-   currently only processing TV Shows
+   HTSP recording might be a movie
+   but let's assume it's an episode
 end note
 Librarian->HTSPInfoParser: episode = factory (fileinfo)
 note over HTSPInfoParser: factory identifies file info is for an episode of Horizon
