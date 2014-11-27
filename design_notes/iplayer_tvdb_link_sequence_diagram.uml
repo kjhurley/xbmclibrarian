@@ -1,0 +1,70 @@
+
+@startuml
+title IPlayer Info suitable for Tvdb storing using link
+Librarian->Librarian: Look for new files
+Librarian->IPlayerInfoParser: file_info_list = read_log(latest iplayer log)
+loop foreach fileinfo in file_info_list
+   Librarian->LibraryRecord: new_record = create (file_info)
+   note over LibraryRecord
+     initialised just using 
+     location of iplayer download
+     This class will connect 
+     the original file and the 
+     Episode object
+   end note
+   Librarian->Librarian: is_it_a_new_download?
+   note over Librarian
+      check against records of what
+      has already been filed
+   end note
+note over Librarian: found new iplayer file info
+note over Librarian
+   IPlayer recordings are never
+   movies - it must be an episode
+end note
+Librarian->IPlayerInfoParser: episode = factory (fileinfo)
+note over IPlayerInfoParser: factory identifies file info is for an episode of Horizon
+IPlayerInfoParser->HorizonEpisode: episode=create(parsed info)
+Librarian->LibraryRecord: associate_episode(episode)
+Librarian->HorizonEpisode: suitable_for_tvdb?
+note over Librarian
+  decide to store in xbmc
+  without nfo file
+end note
+
+== Store for XBMC ==
+
+Librarian->TVDBFiler: filer = create(new_record)
+Librarian->FilingAssistant: put new file in right location(filer)
+note over FilingAssistant: get old and new file names
+FilingAssistant->TVDBFiler: new_filename = build_new_filename()
+TVDBFiler->LibraryRecord: episode = get_episode
+TVDBFiler->HorizonEpisode: show, episode = get_show_and_episode()
+TVDBFiler->TVDBApi: result = search(show, episode)
+opt search unsuccessful
+note over TVDBFiler
+  probably episode title is not unique. 
+  try to use season and episode 
+  numbers instead
+end note
+TVDBFiler->HorizonEpisode: title, season, episode = get_show_season_and_episode()
+TVDBFiler->TVDBApi: result = search(title, season, episode)
+end
+note over TVDBFiler: use result to build new filename
+TVDBFiler --> FilingAssistant: new_filename
+FilingAssistant->TVDBFiler: old_name = original_file()
+TVDBFiler->LibraryRecord: old_name = original_filename()
+LibraryRecord-->TVDBFiler: old_name
+TVDBFiler-->FilingAssistant: old_name
+
+FilingAssistant->StoringRules: rule = get rule for storing
+note over StoringRules: check current configuration settings
+StoringRules->StoreAsALinkRule: rule = create
+FilingAssistant->StoreAsALinkRule: store(old_name, new_filename)
+note over StoreAsALinkRule: create link from old_name to new_filename
+FilingAssistant->FileOnDisk: stored_as(new_filename)
+note over FileOnDisk
+  thsi should be member of LibraryRecord should update too!
+end note
+end
+@enduml
