@@ -10,35 +10,47 @@ import re
 
 import logging
 
-
-def refresh(server, port=9982, user="hts", password="hts"):
-    c=htsp.HTSPClient((server,port))
-    c.hello()
-    c.authenticate(user=user,passwd=password)
-    c.enableAsyncMetadata({'epg':1})
-
-    # Process messages
-    count=0
-    MAX_COUNT=20000
-
+class Refresh(object):
+    def __init__(self, server, port=9982, user="hts", password="hts"):
+        self.server_and_port=(server,port)
+        self.user_name=user
+        self.password=password
+        
+    def connect(self):
+        self.client=htsp.HTSPClient(self.server_and_port)
+        self.client.hello()
+        self.client.authenticate(user=self.user_name,passwd=self.password)
+        self.count=0
+        self.client.enableAsyncMetadata({'epg':1})
+        
+    def read_some_data(self):
+        """ read some data from the epg dump
+        
+        use a generator to allow non-blocking reading
+        """ 
+        while True:
+            msg=self.client.recv()
+            if 'method' in msg:
+                self.count+=1
+                method=msg['method']
+                if method!='initialSyncCompleted':
+                    yield msg
+                else:
+                    break
+        # the end
+        
+import sys
+def refresh(server):
     recorded={}
-    import sys
-
-    while count<MAX_COUNT:
-        count+=1
-        if count%400==0: 
+    ref=Refresh(server)
+    ref.connect()
+    for msg in ref.read_some_data():
+        if ref.count%400==0: 
             sys.stdout.write(".")
             sys.stdout.flush()
-        msg = c.recv()
-        if 'method' in msg:
-            method=msg['method']
-            
-            if method == "dvrEntryAdd" and msg["state"]=="completed":
-                recorded[msg["id"]]=msg
-            elif method == "initialSyncCompleted":
-                print
-                break
-
+        if msg['method'] == "dvrEntryAdd" and msg["state"]=="completed":
+            recorded[msg["id"]]=msg
+    print
     return recorded
 
 if __name__ == '__main__':

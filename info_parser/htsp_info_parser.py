@@ -7,7 +7,7 @@ Created on 14 Aug 2014
 import re
 import tvdb_api
 import tvdb_exceptions
-import htsp.htsp
+import htsp.htsprefresh
 import xml.etree.cElementTree as ET
 import logging
 
@@ -18,7 +18,7 @@ class Episode(object):
         """ test if info fields are a match for this Episode class """
         return True
     
-    def __init__(self, show_name, episode_title, season_number, episode_number):
+    def __init__(self, show_name, episode_title=None, season_number=None, episode_number=None):
         self.show_name=show_name
         self.episode_title=episode_title
         self.episode_number=(season_number,episode_number)
@@ -29,17 +29,20 @@ class Episode(object):
         try:
             tv=tvdb_api.Tvdb()
         except tvdb_exceptions.tvdb_exception:
+            logging.error("couldn't initialise tvdb!")
             self.tvdb_ok=None
             return
         try:
-            the_show=tv[self.show_name_for_tvdb()]
+            show_name=self.show_name_for_tvdb()
+            the_show=tv[show_name]
         except tvdb_exceptions.tvdb_exception:
-            print "tvdb show lookup failed!"
+            logging.warn("tvdb show lookup failed - %s!"%show_name)
             return
         try:
-            search_result=the_show.search(self.episode_title_for_tvdb())
+            ep_title=self.episode_title_for_tvdb()
+            search_result=the_show.search(ep_title)
         except tvdb_exceptions.tvdb_exception:
-            print "tvdb episode lookup failed!"
+            logging.warn( "tvdb episode lookup failed: %s / %s!"%(show_name, ep_title))
             return
         assert len(search_result)>0, "no matches for %s"%(self)
         
@@ -74,15 +77,41 @@ class Episode(object):
         return self.episode_title
     
     def __repr__(self):
-        return "%s;%s;s%02d.e%02d [tvdb=%s]"%(self.show_name_for_tvdb(), self.episode_title_for_tvdb(), self.episode_number[0],self.episode_number[1],self.tvdb_ok)
+        if self.episode_title_for_tvdb is None:
+            return self.show_name_for_tvdb()
+        elif not self.tvdb_ok:
+            return "%s;%s"%(self.show_name_for_tvdb(), self.episode_title_for_tvdb())
+        else:
+            return "%s;%s;s%02d.e%02d [tvdb=%s]"%(self.show_name_for_tvdb(), self.episode_title_for_tvdb(), self.episode_number[0],self.episode_number[1],self.tvdb_ok)
 
 def episode_factory(recording_info):
     """ use dict representing recording_info to choose episode class and
     create an instance of Episode
     """
-    
-    return Episode() 
+    if 'episode_title' in recording_info:
+        return Episode(recording_info['title'], recording_info['episode_title'])
+    else: 
+        return Episode(recording_info['title'])
 
+class DescriptionParser(object):
+    def __init__(self, description):
+        self.details=description
+
+    def description_starts_with_episode_title(self):
+        title_and_details_regex=re.compile("^(?P<title>([A-Z]\S+\s*)+): (?P<details>.*)$")
+        self.match=title_and_details_regex.search(self.details)
+        return self.match is not None
+    
+    def extract_episode_title_from_description(self):
+        assert self.match is not None
+        return self.match.group('title')
+    
+    def extract_details_from_description(self):
+        """ if title matched at start then return the rest else return all of it """
+        if self.match is not None:
+            return self.match.group('details')
+        else:
+            return self.details
        
 class HTSPInfoParser(object):
     '''
@@ -90,24 +119,33 @@ class HTSPInfoParser(object):
     '''
 
 
-    def __init__(self, htsp_server):
+    def __init__(self):
         '''
         Constructor
         '''
-        self._server = htsp_server
         self.shows=[]
         
-    def read_log(self):
+    def read_log(self, recordings):
         """ read through the whole stream building the list of shows 
         
         Initially populate dictionaries built from the fields in the info stream
         
         """
-        recordings=htsp.htsprefresh()
         
         show_info=[]
         current_show={}
         for recording in recordings:
+            if recording['state']=='completed':
+                current_show={
+                    'title': recording['title']
+                    }
+                parser=DescriptionParser(recording['description'])
+                if parser.description_starts_with_episode_title():
+                    current_show['episode_title']=parser.extract_episode_title_from_description()
+                    current_show['details']=parser.extract_details_from_description()
+                else:
+                    current_show['details']=recording['description']
+                    current_show['episode_title']=None
                 show_info+=[current_show]
                 #self.shows+=[episode_factory(current_show)]
                 current_show={}
@@ -118,14 +156,16 @@ class HTSPInfoParser(object):
         for file_info in file_info_list:    
             self.shows+=[episode_factory(file_info)]
         
-        
 if __name__ == '__main__':
     import sys
     p=HTSPInfoParser()
-    p.read_log()
-    for s in p.shows:
-        s.cross_check_with_tvdb()
-        print s
+    recordings=htsp.htsprefresh.refresh("192.168.1.78")
+    p.parse(recordings)
+    print p.shows
+    if False:
+        for s in p.shows:
+            s.cross_check_with_tvdb()
+            print s
         
             
         
