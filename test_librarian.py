@@ -6,6 +6,9 @@ Created on 18 Aug 2014
 import unittest
 import mock
 import librarian
+import logging
+
+logging.getLogger().setLevel(logging.DEBUG)
 
 class Test(unittest.TestCase):
     def setUp(self):
@@ -21,7 +24,7 @@ class Test(unittest.TestCase):
         info_stream="""blah blah blah"""
         with mock.patch("iplayer_info_parser.IPlayerInfoParser.parse") as parse:
             parse.return_value=[{'original':'first_file.flv'}]
-            with mock.patch("iplayer_info_parser.episode_factory") as factory, mock.patch('iplayer_info_parser.HorizonEpisode') as horizon_episode:
+            with mock.patch("iplayer_info_parser.IPlayerInfoParser.episode_factory") as factory, mock.patch('iplayer_info_parser.HorizonEpisode') as horizon_episode:
                 self.librarian.look_for_new_files(iplayer_stream=info_stream)
                 self.assertEqual(1,parse.call_count)
                 horizon_episode.title="bananna"
@@ -36,7 +39,7 @@ class Test(unittest.TestCase):
         info_stream="""blah blah blah"""
         with mock.patch("iplayer_info_parser.IPlayerInfoParser.parse") as parse:
             parse.return_value=[{'original':'first_file.flv'},{'original':'first_file.flv'}]
-            with mock.patch("iplayer_info_parser.episode_factory") as factory, mock.patch('iplayer_info_parser.HorizonEpisode') as horizon_episode:
+            with mock.patch("iplayer_info_parser.IPlayerInfoParser.episode_factory") as factory, mock.patch('iplayer_info_parser.HorizonEpisode') as horizon_episode:
                 self.librarian.look_for_new_files(iplayer_stream=info_stream)
                 self.assertEqual(1,parse.call_count)
                 factory.return_value=horizon_episode

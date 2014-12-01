@@ -79,19 +79,13 @@ class IPlayerInfoParser(object):
     Reads the long info output by get_iplayer and builds objects representing individual shows
     '''
 
-
-    def __init__(self):
-        '''
-        Constructor
-        '''
-        self.shows=[]
-        
     def parse(self, info_stream):
         """ read through the whole stream building the list of shows 
         
         Initially populate dictionaries built from the fields in the info stream
         
         """
+        shows=[]
         fields={'name': "nameshort:\s+(?P<name>\S[\s\S]+)$",
                 "title": "episodeshort:\s+(?P<title>\S[\s\S]+)$",
                 "full title": "title:\s+(?P<full_title>\S[\s\S]+)$",
@@ -112,12 +106,14 @@ class IPlayerInfoParser(object):
                     matched_field=a_match.groupdict()
                     # insert field with leading and trailing whitespace removed
                     [current_show.update({k:matched_field[k].strip()}) for k in matched_field]
+                    logging.debug("added keys %s"%matched_field.keys())
                     
             # end when all optional and mandatory fields are read *or* when all mandatory fields have been read and a blank line is found:
             if  ( len(current_show.keys())==(len(fields.keys())+len(optional_fields)))  or blank_re.match(line) and len(current_show.keys())== len(fields.keys()):
-                self.shows+=[current_show]
+                shows+=[current_show]
                 #self.shows+=[episode_factory(current_show)]
                 current_show={}
+        return shows
 
     @staticmethod
     def episode_factory(episode_info):

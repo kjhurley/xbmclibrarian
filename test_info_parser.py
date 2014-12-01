@@ -116,13 +116,13 @@ versions:       default
 web:            http://www.bbc.co.uk/programmes/b0499z1g.html
 
 """
-        p.parse(stream.splitlines())
-        self.assertEqual(len(p.shows),2)
-        an_episode=p.episode_factory(p.shows[0])
+        shows=p.parse(stream.splitlines())
+        self.assertEqual(len(shows),2)
+        an_episode=p.episode_factory(shows[0])
         self.assertEqual(str(an_episode),"Topsy and Tim;Emergency Rescue;s02.e13 [tvdb=None]")
         self.assertEqual(an_episode.show_name,"Topsy and Tim")
         self.assertEqual(an_episode.episode_title,"Emergency Rescue")
-        another_episode=p.episode_factory(p.shows[1])
+        another_episode=p.episode_factory(shows[1])
         self.assertEqual(str(another_episode),"Topsy and Tim;Busy Builders;s02.e04 [tvdb=None]")
         self.assertEqual(another_episode.show_name,"Topsy and Tim")
         self.assertEqual(another_episode.episode_title,"Busy Builders")
@@ -181,8 +181,8 @@ versions:       default
 web:            http://www.bbc.co.uk/programmes/b00y4yql.html
 """
         p=iplayer_info_parser.IPlayerInfoParser()
-        p.parse(info_stream.splitlines())
-        an_episode=p.episode_factory(p.shows[0])
+        shows=p.parse(info_stream.splitlines())
+        an_episode=p.episode_factory(shows[0])
         self.assertEqual(str(an_episode),"Horizon;Science Under Attack;s00.e10 [tvdb=None]")
         
         #with mock.patch("tvdb_api.Tvdb.__getitem__") as tv:
@@ -249,8 +249,8 @@ versions:       default
 web:            http://www.bbc.co.uk/programmes/b03h79yk.html
         """ 
         p=iplayer_info_parser.IPlayerInfoParser()
-        p.parse(info_stream.splitlines())
-        an_episode=p.episode_factory(p.shows[0])
+        shows=p.parse(info_stream.splitlines())
+        an_episode=p.episode_factory(shows[0])
     
         self.assertEqual(str(an_episode),"Dragons;We Are Family (2);s01.e00 [tvdb=None]")
 
@@ -310,8 +310,8 @@ web:            http://www.bbc.co.uk/programmes/b04dclt8.html
 
         """ 
         p=iplayer_info_parser.IPlayerInfoParser()
-        p.parse(info_stream.splitlines())
-        an_episode=p.episode_factory(p.shows[0])
+        shows=p.parse(info_stream.splitlines())
+        an_episode=p.episode_factory(shows[0])
     
         self.assertEqual(str(an_episode),"The Great British Bake Off: An Extra Slice;Episode 1;s00.e01 [tvdb=None]")
 
@@ -368,8 +368,8 @@ web:            http://www.bbc.co.uk/programmes/b04dg5jq.html
 
         """ 
         p=iplayer_info_parser.IPlayerInfoParser()
-        p.parse(info_stream.splitlines())
-        an_episode=p.episode_factory(p.shows[0])
+        shows=p.parse(info_stream.splitlines())
+        an_episode=p.episode_factory(shows[0])
     
         self.assertEqual(str(an_episode),"The Sky at Night;How to Catch a Comet;s00.e00 [tvdb=None]")
 

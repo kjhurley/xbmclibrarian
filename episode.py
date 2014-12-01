@@ -8,18 +8,25 @@ import tvdb_api
 import tvdb_exceptions
 import xml.etree.cElementTree as ET
 
+
 #logging.getLogger().setLevel(logging.DEBUG)
 class Episode(object):
+    """ base class - tv show without episode title, or season/episode number
+    """
     @staticmethod
     def match_info(info_dict):
-        """ test if info fields are a match for this Episode class """
+        """ test if info fields are a match for this Episode class 
+        
+        this is used by factory function when looking for best matching episode subclass
+        """
         return True
     
-    def __init__(self, show_name, episode_title=None, season_number=None, episode_number=None):
+    def __init__(self, show_name, episode_title=None, season_number=None, episode_number=None, details=None):
         self.show_name=show_name
         self.episode_title=episode_title
         self.episode_number=(season_number,episode_number)
         self.tvdb_ok=None # None if not checked, True if show and episode titles match
+        self.details=details
     
     
     def cross_check_with_tvdb(self):
@@ -56,7 +63,15 @@ class Episode(object):
             
     def convert_to_nfo(self):
         top=ET.Element('episodedetails')
-        ET.SubElement(top,"title")
+        if self.episode_title is not None:
+            title=ET.SubElement(top,"title")
+            title.text=self.episode_title
+            
+        if self.details is not None:
+            plot=ET.SubElement(top,"plot")
+            plot.text=self.details
+        
+        return ET.tostring(top,"UTF-8")
             
     def show_name_for_tvdb(self):
         """ base class is a null op
@@ -81,4 +96,7 @@ class Episode(object):
                 return "%s;%s"%(self.show_name_for_tvdb(), self.episode_title_for_tvdb())
         else:
             return "%s;%s;s%02d.e%02d [tvdb=%s]"%(self.show_name_for_tvdb(), self.episode_title_for_tvdb(), self.episode_number[0],self.episode_number[1],self.tvdb_ok)
+        
+class EpisodeWithTitle(Episode):
+    pass
         

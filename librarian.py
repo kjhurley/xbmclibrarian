@@ -8,6 +8,7 @@ import iplayer_info_parser
 import htsp_info_parser
 import library_record
 import filing_assistant
+import logging
 
 class Librarian(object):
     '''
@@ -40,15 +41,18 @@ class Librarian(object):
         if iplayer_stream is not None:
             parser=self.iplayer_parser
             raw_stream=iplayer_stream
+            logging.debug("parsing iplayer stream")   
         else:
             parser=self.htsp_parser
             raw_stream=htsp_stream
+            logging.debug("parsing htsp stream")   
             
-        parser.parse(raw_stream)
-        for show_info in parser.shows:
-                a_record=library_record.LibraryRecord(show_info)
-                if self.is_a_new_record(a_record):
-                    self.records+=[a_record]
-                    an_episode = parser.episode_factory(show_info)
-                    a_record.associate_episode(an_episode)            
-        
+        shows=parser.parse(raw_stream)
+        for show_info in shows:
+            logging.debug("found a show - %s"%show_info)
+            a_record=library_record.LibraryRecord(show_info)
+            if self.is_a_new_record(a_record):
+                logging.debug("new record found")
+                self.records+=[a_record]
+                an_episode = parser.episode_factory(show_info)
+                a_record.associate_episode(an_episode)            

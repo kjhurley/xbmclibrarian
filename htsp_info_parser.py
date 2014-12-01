@@ -72,7 +72,7 @@ class HTSPInfoParser(object):
                 logging.debug("added %s"%current_show)
                 #self.shows+=[episode_factory(current_show)]
                 current_show={}
-        return
+        return self.shows
 
     @staticmethod
     def episode_factory(recording_info):
