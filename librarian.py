@@ -4,10 +4,10 @@ Created on 18 Aug 2014
 @author: khurley
 '''
 
-import info_parser.iplayer_info_parser
+import iplayer_info_parser
+import htsp_info_parser
 import library_record
 import filing_assistant
-import tvdb_filer
 
 class Librarian(object):
     '''
@@ -19,7 +19,9 @@ class Librarian(object):
         '''
         Constructor
         '''
-        self.iplayer_parser=info_parser.iplayer_info_parser.IPlayerInfoParser()
+        self.iplayer_parser=iplayer_info_parser.IPlayerInfoParser()
+        self.htsp_parser=htsp_info_parser.HTSPInfoParser()
+        
         self.records=[]
         self.filing_assistant = filing_assistant.FilingAssistant()
     
@@ -27,7 +29,7 @@ class Librarian(object):
         # no matches in current list of records:
         return not a_record in self.records
     
-    def look_for_new_files(self, info_stream):
+    def look_for_new_files(self, iplayer_stream=None, htsp_stream=None):
         """ talk to the log parsers to see if there are any new files 
         
         Parsers for IPlayer, TVHeadend etc know how to look in their 
@@ -35,13 +37,18 @@ class Librarian(object):
         to identify candidates for new files
         """
         
-        iplayer_list = self.iplayer_parser.read_log(info_stream)
-        for file_info in iplayer_list:
-            a_record=library_record.LibraryRecord(file_info)
-            if self.is_a_new_record(a_record):
-                self.records+=[a_record]
-                an_episode = info_parser.iplayer_info_parser.episode_factory(file_info)
-                a_record.associate_episode(an_episode)
-                    
-        
+        if iplayer_stream is not None:
+            parser=self.iplayer_parser
+            raw_stream=iplayer_stream
+        else:
+            parser=self.htsp_parser
+            raw_stream=htsp_stream
+            
+        parser.parse(raw_stream)
+        for show_info in parser.shows:
+                a_record=library_record.LibraryRecord(show_info)
+                if self.is_a_new_record(a_record):
+                    self.records+=[a_record]
+                    an_episode = parser.episode_factory(show_info)
+                    a_record.associate_episode(an_episode)            
         

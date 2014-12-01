@@ -4,13 +4,11 @@ Created on 14 Aug 2014
 @author: khurley
 '''
 import unittest
-import mock
-import info_parser.iplayer_info_parser
-import tvdb_api # needed to patch
+import iplayer_info_parser
 
 class Test(unittest.TestCase):
     def testBasicParser(self):
-        p=info_parser.iplayer_info_parser.IPlayerInfoParser()
+        p=iplayer_info_parser.IPlayerInfoParser()
         stream="""INFO: File name prefix = Topsy_and_Tim_Series_2_-_13._Emergency_Rescue_b04bsgc6_default                 
 available:      Unknown
 categories:     Children's,Entertainment & Comedy,Drama
@@ -120,13 +118,15 @@ web:            http://www.bbc.co.uk/programmes/b0499z1g.html
 """
         p.parse(stream.splitlines())
         self.assertEqual(len(p.shows),2)
-        self.assertEqual(str(p.shows[0]),"Topsy and Tim;Emergency Rescue;s02.e13 [tvdb=None]")
-        self.assertEqual(p.shows[0].show_name,"Topsy and Tim")
-        self.assertEqual(p.shows[0].episode_title,"Emergency Rescue")
-        self.assertEqual(str(p.shows[1]),"Topsy and Tim;Busy Builders;s02.e04 [tvdb=None]")
-        self.assertEqual(p.shows[1].show_name,"Topsy and Tim")
-        self.assertEqual(p.shows[1].episode_title,"Busy Builders")
-        self.assertEqual(p.shows[1].episode_number,(2,4))
+        an_episode=p.episode_factory(p.shows[0])
+        self.assertEqual(str(an_episode),"Topsy and Tim;Emergency Rescue;s02.e13 [tvdb=None]")
+        self.assertEqual(an_episode.show_name,"Topsy and Tim")
+        self.assertEqual(an_episode.episode_title,"Emergency Rescue")
+        another_episode=p.episode_factory(p.shows[1])
+        self.assertEqual(str(another_episode),"Topsy and Tim;Busy Builders;s02.e04 [tvdb=None]")
+        self.assertEqual(another_episode.show_name,"Topsy and Tim")
+        self.assertEqual(another_episode.episode_title,"Busy Builders")
+        self.assertEqual(another_episode.episode_number,(2,4))
 
     def test_horizon(self):
         info_stream="""INFO: File name prefix = Horizon_-_2010-2011_10._Science_Under_Attack_b00y4yql_default                 
@@ -180,13 +180,13 @@ version:        default
 versions:       default
 web:            http://www.bbc.co.uk/programmes/b00y4yql.html
 """
-        p=info_parser.iplayer_info_parser.IPlayerInfoParser()
+        p=iplayer_info_parser.IPlayerInfoParser()
         p.parse(info_stream.splitlines())
-    
-        self.assertEqual(str(p.shows[0]),"Horizon;Science Under Attack;s00.e10 [tvdb=None]")
+        an_episode=p.episode_factory(p.shows[0])
+        self.assertEqual(str(an_episode),"Horizon;Science Under Attack;s00.e10 [tvdb=None]")
         
         #with mock.patch("tvdb_api.Tvdb.__getitem__") as tv:
-        #    p.shows[0].cross_check_with_tvdb()
+        #    an_episode.cross_check_with_tvdb()
         #    print tv.called
 
 
@@ -248,10 +248,11 @@ version:        default
 versions:       default
 web:            http://www.bbc.co.uk/programmes/b03h79yk.html
         """ 
-        p=info_parser.iplayer_info_parser.IPlayerInfoParser()
+        p=iplayer_info_parser.IPlayerInfoParser()
         p.parse(info_stream.splitlines())
+        an_episode=p.episode_factory(p.shows[0])
     
-        self.assertEqual(str(p.shows[0]),"Dragons;We Are Family (2);s01.e00 [tvdb=None]")
+        self.assertEqual(str(an_episode),"Dragons;We Are Family (2);s01.e00 [tvdb=None]")
 
 
     def test_bakeoff_extra_slice(self):
@@ -308,10 +309,11 @@ versions:       default
 web:            http://www.bbc.co.uk/programmes/b04dclt8.html
 
         """ 
-        p=info_parser.iplayer_info_parser.IPlayerInfoParser()
+        p=iplayer_info_parser.IPlayerInfoParser()
         p.parse(info_stream.splitlines())
+        an_episode=p.episode_factory(p.shows[0])
     
-        self.assertEqual(str(p.shows[0]),"The Great British Bake Off: An Extra Slice;Episode 1;s00.e01 [tvdb=None]")
+        self.assertEqual(str(an_episode),"The Great British Bake Off: An Extra Slice;Episode 1;s00.e01 [tvdb=None]")
 
     def test_sky_at_night(self):
         info_stream="""1107:   The Sky at Night - How to Catch a Comet, BBC Four, Factual,Science & Nature,TV, default
@@ -365,10 +367,11 @@ versions:       default
 web:            http://www.bbc.co.uk/programmes/b04dg5jq.html
 
         """ 
-        p=info_parser.iplayer_info_parser.IPlayerInfoParser()
+        p=iplayer_info_parser.IPlayerInfoParser()
         p.parse(info_stream.splitlines())
+        an_episode=p.episode_factory(p.shows[0])
     
-        self.assertEqual(str(p.shows[0]),"The Sky at Night;How to Catch a Comet;s00.e00 [tvdb=None]")
+        self.assertEqual(str(an_episode),"The Sky at Night;How to Catch a Comet;s00.e00 [tvdb=None]")
 
         
 if __name__ == "__main__":

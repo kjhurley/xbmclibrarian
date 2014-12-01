@@ -6,12 +6,8 @@ Created on 18 Aug 2014
 import unittest
 import mock
 import librarian
-import library_record
-import info_parser.iplayer_info_parser
 
 class Test(unittest.TestCase):
-
-
     def setUp(self):
         self.librarian = librarian.Librarian()
 
@@ -20,13 +16,14 @@ class Test(unittest.TestCase):
         pass
 
 
-    def est_look_for_new_files(self):
+    def test_look_for_new_files(self):
+        """ see if the librarian can identify when a new file is added """
         info_stream="""blah blah blah"""
-        with mock.patch("info_parser.iplayer_info_parser.IPlayerInfoParser.read_log") as read_log:
-            read_log.return_value=[{'original':'first_file.flv'}]
-            with mock.patch("info_parser.iplayer_info_parser.episode_factory") as factory, mock.patch('info_parser.iplayer_info_parser.HorizonEpisode') as horizon_episode:
-                self.librarian.look_for_new_files(info_stream)
-                self.assertEqual(1,read_log.call_count)
+        with mock.patch("iplayer_info_parser.IPlayerInfoParser.parse") as parse:
+            parse.return_value=[{'original':'first_file.flv'}]
+            with mock.patch("iplayer_info_parser.episode_factory") as factory, mock.patch('iplayer_info_parser.HorizonEpisode') as horizon_episode:
+                self.librarian.look_for_new_files(iplayer_stream=info_stream)
+                self.assertEqual(1,parse.call_count)
                 horizon_episode.title="bananna"
                 horizon_episode.tvdb_ok=True
                 factory.return_value=horizon_episode
@@ -35,12 +32,13 @@ class Test(unittest.TestCase):
                 self.assertEqual(self.librarian.records[0].original_file_name,"first_file.flv")
     
     def test_look_for_new_files_duplicates(self):
+        """ parsing the iplayer stream indicates 2 new files but one is a duplicate """
         info_stream="""blah blah blah"""
-        with mock.patch("info_parser.iplayer_info_parser.IPlayerInfoParser.read_log") as read_log:
-            read_log.return_value=[{'original':'first_file.flv'},{'original':'first_file.flv'}]
-            with mock.patch("info_parser.iplayer_info_parser.episode_factory") as factory, mock.patch('info_parser.iplayer_info_parser.HorizonEpisode') as horizon_episode:
-                self.librarian.look_for_new_files(info_stream)
-                self.assertEqual(1,read_log.call_count)
+        with mock.patch("iplayer_info_parser.IPlayerInfoParser.parse") as parse:
+            parse.return_value=[{'original':'first_file.flv'},{'original':'first_file.flv'}]
+            with mock.patch("iplayer_info_parser.episode_factory") as factory, mock.patch('iplayer_info_parser.HorizonEpisode') as horizon_episode:
+                self.librarian.look_for_new_files(iplayer_stream=info_stream)
+                self.assertEqual(1,parse.call_count)
                 factory.return_value=horizon_episode
                 self.assertEqual(1,factory.call_count)
                 self.assertEqual(len(self.librarian.records),1)
