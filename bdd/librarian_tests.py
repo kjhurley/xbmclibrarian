@@ -22,11 +22,14 @@ class librarian_tests(object):
         
     def prepare_data(self):
         """ get the test data ready """
-        self.recordings=[{'description': "The Red Door: What is behind the mysterious red door in the IT department? What has happened to Moss's new mug? And why is Roy in danger of becoming known as a 'desk rabbit'?  [S]", 'title': 'The IT Crowd', 'stop': 1416873000, 'method': 'dvrEntryAdd', 'start': 1416871200, 'state': 'completed', 'path': '/The-IT-Crowd.2014-11-24.23-20.ts', 'id': 245, 'channel': 54},
- {'description': "The Anything Can Happen Recurrence: Penny and Leonard distract Sheldon from his career problems by reinstating Anything Can Happen Thursday. Raj asks for Howard's advice.  [AD,S]", 'title': 'The Big Bang Theory', 'stop': 1416753000, 'method': 'dvrEntryAdd', 'start': 1416751200, 'state': 'completed', 'path': '/The-Big-Bang-Theory.2014-11-23.14-00.ts', 'id': 243, 'channel': 54}                        
-                    ]
-        self.current_recording=self.recordings[1]
-        return
+        htsp_msg_list=[]
+        filename="bdd/epg.dump"
+        with open(filename) as a_file:
+            for line in a_file.readlines():
+                htsp_msg_list+=[eval(line)]
+        self.lib.look_for_new_files(htsp_stream=htsp_msg_list)
+        # get list of epidodes from the records list held by self.lib
+        self.recordings=[rec.episode for rec in self.lib.records]
     
     def is_data_refreshed(self):
         """ true if epg has been synched (or a mock-up is ready) """
