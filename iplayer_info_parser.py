@@ -128,14 +128,27 @@ class IPlayerInfoParser(object):
             # senum missing
             logging.warning("senum missing from episode info")
             season_index,episode_index=0,0
-                
         
-        specials=[HorizonEpisode, DragonsRidersOfBerk, DragonsDen, BakeOffExtraSlice
+        details=None
+        for details_key in ['desc','descmedium','descshort']:
+            try:
+                details=episode_info[details_key]
+                break
+            except KeyError:
+                continue
+        
+        candidates=[HorizonEpisode, DragonsRidersOfBerk, DragonsDen, BakeOffExtraSlice, 
+                    episode.Episode # always last
                   ]
-        for episode_class in specials:
+        for episode_class in candidates:
             if episode_class.match_info(episode_info):
-                return episode_class(episode_info['name'],episode_info['title'],int(season_index),int(episode_index))
-        return episode.Episode(show_name=episode_info['name'],episode_title=episode_info['title'],season_number=int(season_index),episode_number=int(episode_index))
+                return episode_class(
+                    show_name=episode_info['name'],
+                    episode_title=episode_info['title'],
+                    season_number=int(season_index),
+                    episode_number=int(episode_index),
+                    details=details)
+        raise RuntimeError("failed to create episode from %s"%episode_info)
 
 
     @staticmethod

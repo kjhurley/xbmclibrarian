@@ -80,9 +80,9 @@ class HTSPInfoParser(object):
         create an instance of Episode
         """
         if 'episode_title' in recording_info:
-            return episode.Episode(recording_info['title'], recording_info['episode_title'])
+            return episode.Episode(show_name=recording_info['title'], episode_title=recording_info['episode_title'], details=recording_info["details"])
         else: 
-            return episode.Episode(recording_info['title'])
+            return episode.Episode(show_name=recording_info['title'], details=recording_info["details"])
         
     @staticmethod
     def library_record_factory(recording_info):

@@ -10,11 +10,11 @@ class LibraryRecord(object):
     '''
 
 
-    def __init__(self, file_info):
+    def __init__(self, original):
         '''
         Constructor
         '''
-        self.original_file_name = file_info["original"]
+        self.original_file_name = original
         self.episode = None
         
     def associate_episode(self, episode):

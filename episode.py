@@ -25,13 +25,11 @@ class Episode(object):
     """
     @staticmethod
     def match_info(info_dict):
-        """ test if info fields are a match for this Episode class 
+        """ test if info fields from the raw stream are a match for this Episode class 
         
         this is used by factory function when looking for best matching episode subclass
         """
         return True
-    
-
     
     def __init__(self, show_name, episode_title=None, season_number=None, episode_number=None, details=None):
         self.show_name=show_name
