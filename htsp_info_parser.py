@@ -8,6 +8,7 @@ import re
 import htsp.htsprefresh
 import episode
 import logging
+import library_record
 
 #logging.getLogger().setLevel(logging.DEBUG)
 
@@ -35,7 +36,6 @@ class HTSPInfoParser(object):
     '''
     Reads the htsp epg dump and build objects representing individual shows
     '''
-
 
     def __init__(self):
         '''
@@ -83,7 +83,10 @@ class HTSPInfoParser(object):
             return episode.Episode(recording_info['title'], recording_info['episode_title'])
         else: 
             return episode.Episode(recording_info['title'])
-
+        
+    @staticmethod
+    def library_record_factory(recording_info):
+        return library_record.LibraryRecord(recording_info["path"])
         
 if __name__ == '__main__':
     p=HTSPInfoParser()

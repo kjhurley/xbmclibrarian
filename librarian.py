@@ -50,7 +50,7 @@ class Librarian(object):
         shows=parser.parse(raw_stream)
         for show_info in shows:
             logging.debug("found a show - %s"%show_info)
-            a_record=library_record.LibraryRecord(show_info)
+            a_record=parser.library_record_factory(show_info)
             if self.is_a_new_record(a_record):
                 logging.debug("new record found")
                 self.records+=[a_record]

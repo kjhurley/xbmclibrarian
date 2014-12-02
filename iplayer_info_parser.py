@@ -9,6 +9,7 @@ Created on 14 Aug 2014
 import re
 import logging
 import episode
+import library_record
 
 class DragonsRidersOfBerk(episode.Episode):
     @staticmethod
@@ -136,6 +137,10 @@ class IPlayerInfoParser(object):
                 return episode_class(episode_info['name'],episode_info['title'],int(season_index),int(episode_index))
         return episode.Episode(show_name=episode_info['name'],episode_title=episode_info['title'],season_number=int(season_index),episode_number=int(episode_index))
 
+
+    @staticmethod
+    def library_record_factory(episode_info):
+        return library_record.LibraryRecord(episode_info["original"])
 
         
 if __name__ == '__main__':
