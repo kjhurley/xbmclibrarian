@@ -95,6 +95,9 @@ class Episode(object):
         """
         return self.episode_title
     
+    def get_show_and_episode(self):
+        return self.show_name, self.episode_title
+    
     def __repr__(self):
         """ present string that shows maximum info - may include results of TVDB lookup """
         if self.episode_title_for_tvdb is None:

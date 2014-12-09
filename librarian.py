@@ -3,11 +3,10 @@ Created on 18 Aug 2014
 
 @author: khurley
 '''
-
+import filing_assistant
 import iplayer_info_parser
 import htsp_info_parser
 import library_record
-import filing_assistant
 import logging
 
 class Librarian(object):
