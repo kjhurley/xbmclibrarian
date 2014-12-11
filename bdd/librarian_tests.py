@@ -5,6 +5,8 @@ Created on 1 Dec 2014
 '''
 
 import librarian
+import tvdb_api
+import episode
 
 class librarian_tests(object):
     '''
@@ -20,16 +22,37 @@ class librarian_tests(object):
         self.recordings=None
         self.current_recording=None
         
-    def prepare_data(self):
-        """ get the test data ready """
+    def update_data(self, filename):
+        # read in epg dump data for TVH
         htsp_msg_list=[]
-        filename="bdd/epg.dump"
         with open(filename) as a_file:
             for line in a_file.readlines():
-                htsp_msg_list+=[eval(line)]
+                if 'dvrEntryAdd' in line:
+                    htsp_msg_list+=[eval(line)]
+        return htsp_msg_list
+        
+    def load_first_data(self):
+        """ prepare initial data """
+        # configure web proxy environment: 
+        self.env_variables_for_tvdb()
+        htsp_msg_list=self.update_data("bdd/epg.dump")
+        self.old_num_recordings=len(self.lib.records)
         self.lib.look_for_new_files(htsp_stream=htsp_msg_list)
         # get list of epidodes from the records list held by self.lib
         self.recordings=[rec.episode for rec in self.lib.records]
+        self.current_recording = self.recordings[0]
+        
+    def load_second_data(self):
+        htsp_msg_list=self.update_data("bdd/epg_update.dump")
+        self.old_num_recordings=len(self.lib.records)
+        self.lib.look_for_new_files(htsp_stream=htsp_msg_list)
+        self.current_recording=self.lib.records[-1].episode
+        
+    def load_third_data(self):
+        htsp_msg_list=self.update_data("bdd/epg_third_update.dump")
+        self.old_num_recordings=len(self.lib.records)
+        self.lib.look_for_new_files(htsp_stream=htsp_msg_list)
+        self.current_recording=self.lib.records[-1].episode
     
     def is_data_refreshed(self):
         """ true if epg has been synched (or a mock-up is ready) """
@@ -37,6 +60,7 @@ class librarian_tests(object):
     
     def is_there_a_new_recording(self):
         """ after the latest synch, was a new recording found """
+        assert self.old_num_recordings!=len(self.lib.records), "%d old recordings - %d new recordings"%(self.old_num_recordings,len(self.lib.records))
         assert self.current_recording is not None, "current selected recording not set"
     
     def is_new_recording_a_tv_show(self):
@@ -44,20 +68,31 @@ class librarian_tests(object):
         assert True
     
     def new_recording_title_matches(self, given_title):
-        actual_title="The Big Bang Theory"
+        actual_title=self.current_recording.show_name_for_tvdb()
         assert given_title == actual_title, "given title: <<%s>> doesn't match <<%s>>"%(given_title, actual_title)
         
     def does_new_recording_have_episode_title(self):
         """ can an episode title be extracted from the description for the new recording """
-        assert True
+        assert self.current_recording.episode_title_for_tvdb() is not None, "episode = %s"%self.current_recording
+    
+    def env_variables_for_tvdb(self):
+        import os
+        os.environ["http_proxy"]="http://emea-proxy-pool.eu.alcatel-lucent.com:8000"
+        os.environ["https_proxy"]="https://emea-proxy-pool.eu.alcatel-lucent.com:8000"
     
     def is_there_a_match_in_tvdb(self):
         """ given an episode title can be extracted, can it be matched in tvdb """
-        assert True
+        try:
+            a_tvdb=tvdb_api.Tvdb()
+            self.current_recording.cross_check_with_tvdb(a_tvdb)
+            return True
+        except (episode.NoMatchingEpisodesError, episode.NoMatchingShowsError, episode.MultipleMatchingEpisodesError):
+            return False
+                
     
     def new_recording_season_and_episode_matches(self, season, episode):
-        actual_season=1
+        
         actual_episode=1
         season=int(season)
         episode=int(episode)
-        assert (actual_episode,actual_season) == (season, episode), "season=%d, episode=%d doesn't match actual (%d,%d)"%(season,episode, actual_season, actual_episode)
+        assert self.current_recording.episode_number == (season, episode), "season=%d, episode=%d doesn't match actual %s"%(season,episode, self.current_recording.episode_number)

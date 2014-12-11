@@ -12,13 +12,38 @@ import library_record
 
 #logging.getLogger().setLevel(logging.DEBUG)
 
+class ShowTitleParser(object):
+    def __init__(self, title_text):
+        self.text=title_text
+        self.title=None
+        
+    def parse(self):
+        skip_new_regex=re.compile("((Brand|BRAND)*\s*(New|NEW)\s*(:|-)*\s*)*(?P<title>.*)$")
+        match=skip_new_regex.search(self.text)
+        if match is not None:
+            self.title=match.group('title')
+        else:
+            self.title=self.text    
+
 class DescriptionParser(object):
     def __init__(self, description):
-        self.details=description
+        self.text=description
+        self.details=None
+        self.episode_title=None
+        self.episode_number=None
 
-    def description_starts_with_episode_title(self):
-        title_and_details_regex=re.compile("^(?P<title>([A-Z]\S+\s*)+): (?P<details>.*)$")
-        self.match=title_and_details_regex.search(self.details)
+    def parse(self):
+        # skip 'new' or 'band new' style prefix to the episode title
+        title_and_details_regex=re.compile("^(Brand new series - )*((?P<episode_number>\d+)\/\d+.\s+)*(?P<title>([A-Z]\S+\s*)+): (?P<details>.*)$")
+        self.match=title_and_details_regex.search(self.text)
+        if self.match is not None:
+            self.details=self.match.group('details')
+            if 'title' in self.match.groupdict():
+                self.title=self.match.group('title')
+            if 'episode_number' in self.match.groupdict() and self.match.group('episode_number') is not None:
+                self.episode_number=int(self.match.group('episode_number'))
+        else:
+            self.details=self.text
         return self.match is not None
     
     def extract_episode_title_from_description(self):
@@ -55,14 +80,17 @@ class HTSPInfoParser(object):
         for recording in recordings:
             logging.debug("examinging record %s"%recording)
             if recording['state']=='completed':
+                title_parser=ShowTitleParser(recording['title'])
+                title_parser.parse()
                 current_show={
-                    'title': recording['title']
+                    'title': title_parser.title,
+                    'path': recording['path']
                     }
                 parser=DescriptionParser(recording['description'])
                 logging.debug("parsed into %s"%parser)
-                if parser.description_starts_with_episode_title():
-                    current_show['episode_title']=parser.extract_episode_title_from_description()
-                    current_show['details']=parser.extract_details_from_description()
+                if parser.parse():
+                    current_show['episode_title']=parser.title
+                    current_show['details']=parser.details
                     logging.debug("extracted episode title")
                 else:
                     current_show['details']=recording['description']

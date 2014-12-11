@@ -9,9 +9,9 @@ import os.path
 def remove_non_alphanumeric(in_str):
     return re.sub("[\W]","_",in_str.strip())
 
-class TVDBFiler(object):
+class EpisodeFiler(object):
     '''
-    How to file a show which can be looked up in TVDB
+    Responsible for filing an episode or movie
     
     Created using the library record
     '''
