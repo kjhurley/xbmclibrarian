@@ -3,8 +3,6 @@ Created on 11 Dec 2014
 
 @author: kehurley
 '''
-from episode import Episode
-
 class ManualEpisodeMatcher(object):
     '''
     help to find a manual match by narrowing search of online data
@@ -19,18 +17,34 @@ class ManualEpisodeMatcher(object):
         '''
         Constructor
         '''
+        self.tvdb=tvdb
         self.episode=episode
-        self.matches=[] # candidate matches so far
-        self.filter={} # inputs used to narrow search so far
+        self.matches=None # candidate matches so far
+        
+    def clear(self):
+        self.show=self.tvdb[self.episode.show_name]
+        assert self.show is not None, "no show matching the show name for this episode"
+        
+        self.matches=None
         
     def narrow(self, **kwargs):
         """ apply info to narrow
         
         if called with no params then just use info in episode object to narrow
         
-        @param show - show title
-        @param keywords - significant words
+        @param term - string to search for
+        @param key - only search in this key
         @param season - season number to try
         """
-        
+        if self.matches is None:
+            self.matches=set([e for e in self.show.search(**kwargs)])
+        else:
+            len_current_matches=len(self.matches)   
+            episodes=set([e for e in self.show.search(**kwargs)])
+            print episodes
+            if len(episodes)>0:
+                if self.matches.isdisjoint(episodes):
+                    self.matches=self.matches | episodes
+                else:
+                    self.matches = self.matches & episodes 
         

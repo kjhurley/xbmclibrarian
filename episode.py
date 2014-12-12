@@ -7,7 +7,6 @@ Created on 1 Dec 2014
 import tvdb_exceptions
 import xml.etree.cElementTree as ET
 import logging
-from pygments.lexers import other
 
 class NoMatchingShowsError(Exception):
     pass
@@ -42,6 +41,7 @@ class Episode(object):
         return str(other) == str(self)
     
     def cross_check_with_tvdb(self, tvdb):
+        logging.debug("Episode.cross_check_with_tvdb")
         try:
             the_show=tvdb[self.show_name_for_tvdb()]
         except tvdb_exceptions.tvdb_exception:
@@ -57,11 +57,13 @@ class Episode(object):
         
         if len(search_result)==1:
             matched_episode=search_result[0]
+            logging.debug("matched episode items %s"%matched_episode.items())
         elif len(search_result)>1:
             # try using season/episode to disambiguate
             if self.episode_number != (None,None):
                 try:
                     matched_episode=the_show[self.episode_number[0]][self.episode_number[1]]
+                    logging.debug("matched episode items %s"%matched_episode.items())
                 except tvdb_exceptions.tvdb_exception:
                     raise MultipleMatchingEpisodesError("could not resolve multiple matches for %s"%self,search_result)
             else:

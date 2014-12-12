@@ -7,6 +7,7 @@ Created on 1 Dec 2014
 import librarian
 import tvdb_api
 import episode
+import logging
 
 class librarian_tests(object):
     '''
@@ -82,6 +83,7 @@ class librarian_tests(object):
     
     def is_there_a_match_in_tvdb(self):
         """ given an episode title can be extracted, can it be matched in tvdb """
+        logging.getLogger().setLevel(logging.DEBUG)
         try:
             a_tvdb=tvdb_api.Tvdb()
             self.current_recording.cross_check_with_tvdb(a_tvdb)
@@ -91,7 +93,6 @@ class librarian_tests(object):
                 
     
     def new_recording_season_and_episode_matches(self, season, episode):
-        
         actual_episode=1
         season=int(season)
         episode=int(episode)

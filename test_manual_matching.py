@@ -7,6 +7,7 @@ import unittest
 import mock
 import htsp_info_parser
 import manual_matcher
+import tvdb_api
 
 class Test(unittest.TestCase):
     def setUp(self):
@@ -22,8 +23,31 @@ class Test(unittest.TestCase):
         self.assertEqual(the_episode.episode_title,None)
         self.assertEqual(the_episode.details[:37], "Tony Robinson and the Team have three")
 
-        tvdb=mock.MagicMock()
+        import os
+        os.environ["http_proxy"]="http://emea-proxy-pool.eu.alcatel-lucent.com:8000"
+        os.environ["https_proxy"]="https://emea-proxy-pool.eu.alcatel-lucent.com:8000"
+        tvdb=tvdb_api.Tvdb()
         matcher=manual_matcher.ManualEpisodeMatcher(the_episode, tvdb)
+        matcher.clear()
+        matcher.narrow(term="Norman", key='overview')
+        self.assertEqual(len(matcher.matches), 14)
+        match_repr=[str(ep) for ep in matcher.matches]
+        print len(match_repr),":",match_repr
+        last_match_len=len(matcher.matches)
+        matcher.narrow(term="Castle", key='overview')
+        self.assertTrue(len(matcher.matches)<last_match_len)
+        print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
+        last_match_len=len(matcher.matches)
+        matcher.narrow(term="Henley", key='overview')
+        self.assertTrue(len(matcher.matches)>last_match_len)
+        print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
+        last_match_len=len(matcher.matches)
+        
+        matcher.clear()
+        matcher.narrow(term="Henley", key='overview')
+        self.assertTrue(len(matcher.matches)==1)
+        print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
+        
         
 
 
