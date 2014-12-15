@@ -34,19 +34,21 @@ class Test(unittest.TestCase):
         match_repr=[str(ep) for ep in matcher.matches]
         print len(match_repr),":",match_repr
         last_match_len=len(matcher.matches)
-        matcher.narrow(term="Castle", key='overview')
+        matcher.narrow(term="Castle")
         self.assertTrue(len(matcher.matches)<last_match_len)
         print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
         last_match_len=len(matcher.matches)
-        matcher.narrow(term="Henley", key='overview')
+        matcher.narrow(term="Midlands")
         self.assertTrue(len(matcher.matches)>last_match_len)
         print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
         last_match_len=len(matcher.matches)
         
         matcher.clear()
-        matcher.narrow(term="Henley", key='overview')
+        matcher.narrow(term="Henley")
         self.assertTrue(len(matcher.matches)==1)
         print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
+        
+        
         
         
 
