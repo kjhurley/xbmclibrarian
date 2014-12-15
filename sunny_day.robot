@@ -37,8 +37,15 @@ Identify recording for new series
 	Does new recording have episode title
 	Is there a match in tvdb
 	New recording season and episode matches   7    8   
-    [Tags]   Sunny Day   Identifying Episodes
+    [Tags]   Sunny Day   Identifying Episodes  
     
+Narrow the search
+    Load First Data
+    Select a TVH Recording  23
+    Expect number of matches using  2   Ottoman   
+    Expect number of matches using  3   Ottoman   
+    
+
 *** Setting ***
 Library     bdd/librarian_tests.py                     
                    

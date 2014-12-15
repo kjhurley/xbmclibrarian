@@ -8,10 +8,14 @@ import mock
 import htsp_info_parser
 import manual_matcher
 import tvdb_api
+import configuration
 
 class Test(unittest.TestCase):
     def setUp(self):
         self.p=htsp_info_parser.HTSPInfoParser()
+        cfg=configuration.Configuration()
+        cfg.parse_config_file()
+        cfg.apply()
         
     def test_time_team_one_filter(self):
         recordings=[{'description': "Tony Robinson and the Team have three days to uncover a Norman castle that once dominated the Midlands village of Henley-in-Arden.  [S]", 'title': 'Time Team', 'stop': 1416873000, 'method': 'dvrEntryAdd', 'start': 1416871200, 'state': 'completed', 'path': '/Time-Team.2014-11-24.23-20.ts', 'id': 245, 'channel': 54}
@@ -23,30 +27,27 @@ class Test(unittest.TestCase):
         self.assertEqual(the_episode.episode_title,None)
         self.assertEqual(the_episode.details[:37], "Tony Robinson and the Team have three")
 
-        import os
-        os.environ["http_proxy"]="http://emea-proxy-pool.eu.alcatel-lucent.com:8000"
-        os.environ["https_proxy"]="https://emea-proxy-pool.eu.alcatel-lucent.com:8000"
+
         tvdb=tvdb_api.Tvdb()
         matcher=manual_matcher.ManualEpisodeMatcher(the_episode, tvdb)
-        matcher.clear()
-        matcher.narrow(term="Norman", key='overview')
-        self.assertEqual(len(matcher.matches), 14)
-        match_repr=[str(ep) for ep in matcher.matches]
+        matches=matcher.narrow(terms=["Norman"])
+        self.assertEqual(len(matches), 18)
+        match_repr=[str(ep) for ep in matches]
         print len(match_repr),":",match_repr
-        last_match_len=len(matcher.matches)
-        matcher.narrow(term="Castle")
-        self.assertTrue(len(matcher.matches)<last_match_len)
-        print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
-        last_match_len=len(matcher.matches)
-        matcher.narrow(term="Midlands")
-        self.assertTrue(len(matcher.matches)>last_match_len)
-        print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
-        last_match_len=len(matcher.matches)
+        last_match_len=len(matches)
+        matches=matcher.narrow(terms=["Norman", "Castle"])
+        self.assertTrue(len(matches)<last_match_len)
+        print len(matches),":",[str(ep) for ep in matches]
+        last_match_len=len(matches)
+        matches=matcher.narrow(terms=["Norman","Castle","Midlands"])
+        self.assertTrue(len(matches)>last_match_len)
+        print len(matches),":",[str(ep) for ep in matches]
+        last_match_len=len(matches)
         
-        matcher.clear()
-        matcher.narrow(term="Henley")
-        self.assertTrue(len(matcher.matches)==1)
-        print len(matcher.matches),":",[str(ep) for ep in matcher.matches]
+        matcher.refresh_data()
+        matches=matcher.narrow(["Henley"])
+        self.assertTrue(len(matches)==1)
+        print len(matches),":",[str(ep) for ep in matches]
         
         
         

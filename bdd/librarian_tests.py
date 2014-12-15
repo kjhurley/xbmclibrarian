@@ -8,6 +8,8 @@ import librarian
 import tvdb_api
 import episode
 import logging
+import configuration
+import manual_matcher
 
 class librarian_tests(object):
     '''
@@ -35,7 +37,9 @@ class librarian_tests(object):
     def load_first_data(self):
         """ prepare initial data """
         # configure web proxy environment: 
-        self.env_variables_for_tvdb()
+        cfg=configuration.Configuration()
+        cfg.parse_config_file()
+        cfg.apply()
         htsp_msg_list=self.update_data("bdd/epg.dump")
         self.old_num_recordings=len(self.lib.records)
         self.lib.look_for_new_files(htsp_stream=htsp_msg_list)
@@ -77,9 +81,7 @@ class librarian_tests(object):
         assert self.current_recording.episode_title_for_tvdb() is not None, "episode = %s"%self.current_recording
     
     def env_variables_for_tvdb(self):
-        import os
-        os.environ["http_proxy"]="http://emea-proxy-pool.eu.alcatel-lucent.com:8000"
-        os.environ["https_proxy"]="https://emea-proxy-pool.eu.alcatel-lucent.com:8000"
+        pass
     
     def is_there_a_match_in_tvdb(self):
         """ given an episode title can be extracted, can it be matched in tvdb """
@@ -97,3 +99,21 @@ class librarian_tests(object):
         season=int(season)
         episode=int(episode)
         assert self.current_recording.episode_number == (season, episode), "season=%d, episode=%d doesn't match actual %s"%(season,episode, self.current_recording.episode_number)
+
+
+    def select_a_tvh_recording(self, index):
+        """ select current recording from recording list """
+        logging.debug("recording list = %s"%self.lib.records)
+        self.current_recording = self.lib.records[int(index)]
+        logging.debug("selected %s"%self.current_recording)
+        
+    def expect_number_of_matches_using(self, num_expected_matches, *args):  
+        a_tvdb=tvdb_api.Tvdb()
+        m=manual_matcher.ManualEpisodeMatcher(self.current_recording.episode, a_tvdb)
+        matches=m.narrow([search_term])
+        num_expected_matches=int(num_expected_matches)
+        assert num_expected_matches == len(matches), "expected %d matches, got %d"%(num_expected_matches, len(matches))
+        for ep_match in matches:
+            print ep_match, ": overview =", ep_match.get('overview')
+        
+        

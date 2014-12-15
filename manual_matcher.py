@@ -19,32 +19,38 @@ class ManualEpisodeMatcher(object):
         '''
         self.tvdb=tvdb
         self.episode=episode
-        self.matches=None # candidate matches so far
+        self.show=None
         
-    def clear(self):
+    def refresh_data(self):
         self.show=self.tvdb[self.episode.show_name]
         assert self.show is not None, "no show matching the show name for this episode"
         
-        self.matches=None
-        
-    def narrow(self, **kwargs):
+    def narrow(self, terms):
         """ apply info to narrow
         
         if called with no params then just use info in episode object to narrow
         
-        @param term - string to search for
-        @param key - only search in this key
-        @param season - season number to try
-        """
-        if self.matches is None:
-            self.matches=set([e for e in self.show.search(**kwargs)])
-        else:
-            len_current_matches=len(self.matches)   
-            episodes=set([e for e in self.show.search(**kwargs)])
-            print episodes
-            if len(episodes)>0:
-                if self.matches.isdisjoint(episodes):
-                    self.matches=self.matches | episodes
-                else:
-                    self.matches = self.matches & episodes 
+        updates the matches list 
         
+        @param terms - list of strings to search for
+        
+        @return: the list of matching tvdb episode objects
+        
+        """
+        if self.show is None:
+            self.refresh_data()
+        matches=None
+        for term in terms:
+            if matches is None:
+                matches=set([e for e in self.show.search(term)])
+            else:
+                len_current_matches=len(matches)   
+                episodes=set([e for e in self.show.search(term)])
+                print "term =",term,"; episodes=",episodes
+                if len(episodes)>0:
+                    if matches.isdisjoint(episodes):
+                        matches=matches | episodes
+                    else:
+                        matches = matches & episodes 
+                print "matches =", matches
+        return matches

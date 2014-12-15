@@ -33,6 +33,8 @@ class Episode(object):
     def __init__(self, show_name, episode_title=None, season_number=None, episode_number=None, details=None):
         self.show_name=show_name
         self.episode_title=episode_title
+        if season_number is None and episode_number is not None:
+            season_number=-1 # unknown
         self.episode_number=(season_number,episode_number)
         self.details=details
     

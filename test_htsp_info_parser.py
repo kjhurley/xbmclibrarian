@@ -3,6 +3,7 @@ Created on 28 Nov 2014
 
 @author: kevin
 '''
+import logging
 import unittest
 import htsp_info_parser
 
@@ -41,7 +42,6 @@ class TestParsingDetails(unittest.TestCase):
         description="Time team do stuff somewhere. It takes a while."
         parser=htsp_info_parser.DescriptionParser(
                      description)
-        self.assertTrue(not parser.parse())
         self.assertEqual(parser.extract_details_from_description(),
                          description)
         
@@ -61,7 +61,7 @@ class TestParsingDetails(unittest.TestCase):
         parser=htsp_info_parser.DescriptionParser(
                      description)
         self.assertTrue(parser.parse())
-        self.assertEqual(parser.title, "The Itchy Brain Simulation")
+        self.assertEqual(parser.episode_title, "The Itchy Brain Simulation")
         self.assertEqual(parser.details,
                          details)
         
@@ -85,6 +85,14 @@ class TestHTSPInfoParser(unittest.TestCase):
         self.p.parse(recordings)
         self.assertEqual(self.p.shows[0]['title'],"The Big Bang Theory")
         self.assertEqual(self.p.shows[0]['episode_title'],"The Itchy Brain Simulation")
+        
+    def test_get_title(self):
+        recordings=[{'description': "Brand new series - 3/3. Visiting the great mosques and palaces built by the Ottoman emperors, Simon Sebag Montefiore looks at how Istanbul became the imperial capital and Islam's most powerful city. Also in HD. [AD,S]", 'title': 'Byzantium: A Tale of Three Cities', 'stop': 1387937100, 'method': 'dvrEntryAdd', 'start': 1387933500, 'state': 'completed', 'path': '/Byzantium_-A-Tale-of-Three-Cities.2013-12-25.01-05.mkv', 'id': 20, 'channel': 80}
+                    ]
+        self.p.parse(recordings)
+        self.assertEqual(self.p.shows[0]['title'],"Byzantium: A Tale of Three Cities")
+        self.assertEqual( self.p.shows[0]['episode_title'], None)
+        self.assertEqual( self.p.shows[0]['episode_number'], 3)
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

@@ -54,4 +54,5 @@ class Librarian(object):
                 logging.debug("new record found")
                 self.records+=[a_record]
                 an_episode = parser.episode_factory(show_info)
+                logging.debug("created Episode for %s with id %s"%(an_episode, id(an_episode)))    
                 a_record.associate_episode(an_episode)            

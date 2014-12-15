@@ -18,7 +18,7 @@ class ShowTitleParser(object):
         self.title=None
         
     def parse(self):
-        skip_new_regex=re.compile("((Brand|BRAND)*\s*(New|NEW)\s*(:|-)*\s*)*(?P<title>.*)$")
+        skip_new_regex=re.compile("((Brand|BRAND)?\s?(New|NEW)\s?(:|-)*\s+)?(?P<title>.*)$")
         match=skip_new_regex.search(self.text)
         if match is not None:
             self.title=match.group('title')
@@ -31,31 +31,43 @@ class DescriptionParser(object):
         self.details=None
         self.episode_title=None
         self.episode_number=None
+        self.new_ep_re=re.compile("Brand new series - (?P<the_rest>.*)")
+        self.episode_number_re=re.compile("(?P<episode_number>\d+)\/\d+\.\s+(?P<the_rest>.*)")
+        self.episode_title_re=re.compile("(?P<title>([A-Z]\S+\s*)+):\s+(?P<the_rest>.*)")
 
     def parse(self):
+        logging.debug("text="+self.text)
+        if self.new_ep_re.match(self.text):
+            self.text=self.new_ep_re.match(self.text).group('the_rest')
+            logging.debug("Remove brand new ... text="+self.text)
+        if self.episode_number_re.match(self.text):
+            self.episode_number=int(self.episode_number_re.match(self.text).group('episode_number'))
+            self.text=self.episode_number_re.match(self.text).group('the_rest')
+            logging.debug("Removed episode number ... text="+self.text)
+        if self.episode_title_re.match(self.text):
+            self.episode_title=self.episode_title_re.match(self.text).group('title')
+            self.text=self.episode_title_re.match(self.text).group('the_rest')
+            logging.debug("Removed episode title ... text="+self.text)
+        
         # skip 'new' or 'band new' style prefix to the episode title
-        title_and_details_regex=re.compile("^(Brand new series - )*((?P<episode_number>\d+)\/\d+.\s+)*(?P<title>([A-Z]\S+\s*)+): (?P<details>.*)$")
-        self.match=title_and_details_regex.search(self.text)
+        details_regex=re.compile("^(?P<details>.*)$")
+        self.match=details_regex.match(self.text)
         if self.match is not None:
             self.details=self.match.group('details')
-            if 'title' in self.match.groupdict():
-                self.title=self.match.group('title')
-            if 'episode_number' in self.match.groupdict() and self.match.group('episode_number') is not None:
-                self.episode_number=int(self.match.group('episode_number'))
         else:
             self.details=self.text
-        return self.match is not None
+        return self.details is not None
     
     def extract_episode_title_from_description(self):
-        assert self.match is not None
-        return self.match.group('title')
+        assert self.episode_title is not None
+        return self.episode_title
     
     def extract_details_from_description(self):
         """ if title matched at start then return the rest else return all of it """
-        if self.match is not None:
-            return self.match.group('details')
-        else:
+        if self.details is not None:
             return self.details
+        else:
+            return self.text
        
 class HTSPInfoParser(object):
     '''
@@ -89,8 +101,9 @@ class HTSPInfoParser(object):
                 parser=DescriptionParser(recording['description'])
                 logging.debug("parsed into %s"%parser)
                 if parser.parse():
-                    current_show['episode_title']=parser.title
+                    current_show['episode_title']=parser.episode_title
                     current_show['details']=parser.details
+                    current_show['episode_number']=parser.episode_number
                     logging.debug("extracted episode title")
                 else:
                     current_show['details']=recording['description']
@@ -108,9 +121,9 @@ class HTSPInfoParser(object):
         create an instance of Episode
         """
         if 'episode_title' in recording_info:
-            return episode.Episode(show_name=recording_info['title'], episode_title=recording_info['episode_title'], details=recording_info["details"])
+            return episode.Episode(show_name=recording_info['title'], episode_title=recording_info['episode_title'], details=recording_info["details"], episode_number=recording_info['episode_number'])
         else: 
-            return episode.Episode(show_name=recording_info['title'], details=recording_info["details"])
+            return episode.Episode(show_name=recording_info['title'], details=recording_info["details"], episode_number=recording_info['episode_number'])
         
     @staticmethod
     def library_record_factory(recording_info):
