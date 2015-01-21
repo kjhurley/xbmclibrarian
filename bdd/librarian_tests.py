@@ -110,6 +110,8 @@ class librarian_tests(object):
     def expect_number_of_matches_using(self, num_expected_matches, *args):  
         a_tvdb=tvdb_api.Tvdb()
         m=manual_matcher.ManualEpisodeMatcher(self.current_recording.episode, a_tvdb)
+        if len(args)>0:
+            search_term = args[0]
         matches=m.narrow([search_term])
         num_expected_matches=int(num_expected_matches)
         assert num_expected_matches == len(matches), "expected %d matches, got %d"%(num_expected_matches, len(matches))

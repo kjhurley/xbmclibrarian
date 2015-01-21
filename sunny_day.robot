@@ -43,7 +43,6 @@ Narrow the search
     Load First Data
     Select a TVH Recording  23
     Expect number of matches using  2   Ottoman   
-    Expect number of matches using  3   Ottoman   
     
 
 *** Setting ***
